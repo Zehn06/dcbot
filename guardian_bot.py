@@ -338,8 +338,8 @@ class GuardianBot(commands.Bot):
         
         await increment_messages(message.author.id, message.guild.id)
         
-        if not message.author.guild_permissions.moderate_members:
-            await self.moderate_message(message)
+       
+    await self.moderate_message(message)
         
         await self.process_commands(message)
     
@@ -533,3 +533,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
