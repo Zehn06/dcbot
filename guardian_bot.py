@@ -47,7 +47,15 @@ TURKISH_PROFANITY = [
     "budala", "mankafa", "şerefsiz", "namussuz", "haysiyetsiz",
     "pislik", "sürtük", "kaltak", "orospu", "piç", "gavat",
     "amk", "aq", "mk", "sg", "siktir", "bok", "göt", "yarrak",
-    "am", "s*k", "a*k", "o*ospu", "p*ç"
+    "am", "s*k", "a*k", "o*ospu", "p*ç",
+    # Ek kelimeler
+    "sik", "sikik", "sikim", "sikimin", "siktimin", "siktiğimin",
+    "oç", "orosbucocu", "orosbuçocu", "orospuçocuğu", "orosbucocugu",
+    "özürlü", "engelli", "geri zekalı", "gerizekalı",
+    "yavşak", "ibne", "götveren", "pezevenk", "puşt", "kahpe",
+    "döl", "meme", "amcık", "amına", "amını", "amına koyayım",
+    "ananı", "anana", "bacını", "bacına",
+    "kırığı", "sıkıntı", "kodumun", "kodumunun"
 ]
 
 INSULT_PATTERNS = [
@@ -338,8 +346,8 @@ class GuardianBot(commands.Bot):
         
         await increment_messages(message.author.id, message.guild.id)
         
-       
-    await self.moderate_message(message)
+        # Herkesi kontrol et (moderatörler dahil)
+        await self.moderate_message(message)
         
         await self.process_commands(message)
     
@@ -533,4 +541,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
