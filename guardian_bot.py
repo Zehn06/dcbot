@@ -11,6 +11,7 @@ import asyncio
 import aiosqlite
 import json
 import re
+import random
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -966,7 +967,6 @@ async def instagram_timing(interaction: discord.Interaction):
             for _ in range(7)  # 7 days of data
         ]
         
-        import random
         optimal = bot.instagram_analytics.calculate_optimal_posting_time(
             'Europe/Istanbul',
             historical_engagement
