@@ -1,5 +1,23 @@
 # 🛡️ Guardian Bot - Deployment Guide
 
+## 🎉 NEW: Instagram Analytics & AI Features!
+
+Guardian Bot artık **Instagram analytics** ve **AI-powered content management** özellikleriyle geliyor!
+
+### 📱 Instagram Özellikleri:
+- 🎯 **Profil Analizi** - Engagement, algoritma skoru, monetization
+- 📊 **Performans Tahmini** - Monte Carlo simülasyonu ile reach/engagement tahmini
+- ✍️ **AI Caption Üretici** - GPT-4/Claude/Gemini ile caption oluşturma
+- #️⃣ **Hashtag Optimizasyonu** - 7+ kategori, trend analizi
+- 🚀 **Büyüme Stratejisi** - Growth hacking planları
+- 🎯 **Rakip Analizi** - Benchmarking ve competitive intelligence
+- ⏰ **Optimal Zamanlama** - En iyi paylaşım saatleri
+- 💰 **Monetization Hesaplayıcı** - Kazanç potansiyeli
+
+**Detaylar için:** [INSTAGRAM_FEATURES.md](INSTAGRAM_FEATURES.md)
+
+---
+
 ## Dosyalar
 - `guardian_bot.py` - Tek dosya bot kodu
 - `requirements.txt` - Python paketleri
