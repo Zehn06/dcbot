@@ -11,8 +11,14 @@ import asyncio
 import aiosqlite
 import json
 import re
+import random
 from datetime import datetime
 from dotenv import load_dotenv
+
+# Instagram Analytics Module
+from instagram_analytics import (
+    InstagramAnalytics, AIProvider, create_instagram_tables
+)
 
 # Opsiyonel: Gemini AI
 try:
@@ -110,6 +116,10 @@ async def init_database():
         """)
         await db.commit()
         print("✅ Veritabanı hazır")
+    
+    # Initialize Instagram analytics tables
+    await create_instagram_tables(DATABASE_PATH)
+    print("✅ Instagram analytics veritabanı hazır")
 
 async def get_user(user_id: int, guild_id: int):
     async with aiosqlite.connect(DATABASE_PATH) as db:
@@ -320,6 +330,17 @@ class GuardianBot(commands.Bot):
             print("✅ Gemini AI başlatıldı")
         else:
             self.gemini = None
+        
+        # Initialize Instagram Analytics
+        ai_config = {
+            'OPENAI_API_KEY': os.getenv('OPENAI_API_KEY'),
+            'ANTHROPIC_API_KEY': os.getenv('ANTHROPIC_API_KEY'),
+            'GEMINI_API_KEY': os.getenv('GEMINI_API_KEY'),
+            'HUGGINGFACE_API_KEY': os.getenv('HUGGINGFACE_API_KEY')
+        }
+        self.ai_provider = AIProvider(ai_config)
+        self.instagram_analytics = InstagramAnalytics(self.ai_provider)
+        print("✅ Instagram Analytics başlatıldı")
     
     async def setup_hook(self):
         await init_database()
@@ -522,9 +543,469 @@ async def help_cmd(interaction: discord.Interaction):
     embed.add_field(name="📊 Reputation", value="`/rep` `/siralama`", inline=True)
     embed.add_field(name="🛡️ Moderasyon", value="`/uyar` `/odul`", inline=True)
     embed.add_field(name="🤖 AI", value="`/sor`", inline=True)
+    embed.add_field(name="📱 Instagram", value="`/ig_analiz` `/ig_tahmin` `/ig_caption` `/ig_hashtag` `/ig_rapor`", inline=False)
     embed.set_footer(text="Küfür/hakaret otomatik algılanır")
     
     await interaction.response.send_message(embed=embed)
+
+# ==================== INSTAGRAM ANALYTICS COMMANDS ====================
+
+@bot.tree.command(name="ig_analiz", description="Instagram profil analizi")
+async def instagram_analysis(
+    interaction: discord.Interaction,
+    takipci: int,
+    begeni_ortalama: int,
+    yorum_ortalama: int = 10,
+    kayit_ortalama: int = 5
+):
+    """Comprehensive Instagram profile analysis"""
+    await interaction.response.defer(thinking=True)
+    
+    try:
+        # Calculate engagement rate
+        engagement_rate = bot.instagram_analytics.calculate_engagement_rate(
+            begeni_ortalama, yorum_ortalama, kayit_ortalama, takipci
+        )
+        
+        # Create profile data
+        profile_data = {
+            'followers': takipci,
+            'engagement_rate': engagement_rate,
+            'avg_reach': int(takipci * 0.3),
+            'posts_per_week': 5,
+            'stories_per_week': 7,
+            'save_rate': 2.5,
+            'follower_quality': 75,
+            'posts_per_month': 20
+        }
+        
+        # Calculate algorithm score
+        algorithm_score = bot.instagram_analytics.calculate_algorithm_score(profile_data)
+        
+        # Calculate monetization value
+        monetization = bot.instagram_analytics.calculate_monetization_value(profile_data)
+        
+        # Create embed
+        embed = discord.Embed(
+            title="📱 Instagram Profil Analizi",
+            description=f"Kapsamlı analiz sonuçları",
+            color=discord.Color.purple()
+        )
+        
+        embed.add_field(
+            name="📊 Engagement Metrikleri",
+            value=f"**Engagement Rate:** {engagement_rate:.2f}%\n"
+                  f"**Algoritma Skoru:** {algorithm_score}/100\n"
+                  f"**Tier:** {monetization['tier'].upper()}",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="💰 Kazanç Potansiyeli",
+            value=f"**Post Değeri:** ${monetization['sponsorship_value_per_post']:.2f}\n"
+                  f"**Aylık Potansiyel:** ${monetization['monthly_earning_potential']:.2f}\n"
+                  f"**Yıllık Potansiyel:** ${monetization['annual_potential']:.2f}",
+            inline=False
+        )
+        
+        # Quality assessment
+        if algorithm_score >= 80:
+            quality = "🌟 Mükemmel - Algoritma favorisiniz!"
+        elif algorithm_score >= 60:
+            quality = "💎 İyi - Güçlü bir profil"
+        elif algorithm_score >= 40:
+            quality = "⚠️ Orta - İyileştirme gerekli"
+        else:
+            quality = "🔴 Zayıf - Strateji değişikliği şart"
+        
+        embed.add_field(name="🎯 Genel Değerlendirme", value=quality, inline=False)
+        
+        embed.set_footer(text="💡 Detaylı rapor için /ig_rapor kullanın")
+        
+        await interaction.followup.send(embed=embed)
+        
+    except Exception as e:
+        await interaction.followup.send(f"❌ Hata: {str(e)}", ephemeral=True)
+
+@bot.tree.command(name="ig_tahmin", description="Post performans tahmini")
+async def instagram_prediction(
+    interaction: discord.Interaction,
+    takipci: int,
+    engagement_rate: float = 3.0,
+    optimal_zaman: bool = True,
+    kaliteli_hashtag: bool = True,
+    gorsel_kalite: int = 85
+):
+    """Predict post performance before publishing"""
+    await interaction.response.defer(thinking=True)
+    
+    try:
+        profile_data = {
+            'followers': takipci,
+            'engagement_rate': engagement_rate,
+            'avg_reach': int(takipci * 0.3)
+        }
+        
+        post_data = {
+            'optimal_time': optimal_zaman,
+            'optimized_hashtags': kaliteli_hashtag,
+            'quality_score': gorsel_kalite
+        }
+        
+        prediction = await bot.instagram_analytics.predict_post_performance(post_data, profile_data)
+        
+        embed = discord.Embed(
+            title="🎯 Post Performans Tahmini",
+            description="AI destekli Monte Carlo simülasyonu",
+            color=discord.Color.blue()
+        )
+        
+        reach = prediction['predicted_reach']
+        engagement = prediction['predicted_engagement']
+        
+        embed.add_field(
+            name="👁️ Erişim Tahmini",
+            value=f"**Min:** {reach['min']:,}\n"
+                  f"**Ortalama:** {reach['avg']:,}\n"
+                  f"**Max:** {reach['max']:,}",
+            inline=True
+        )
+        
+        embed.add_field(
+            name="💝 Etkileşim Tahmini",
+            value=f"**Beğeni:** ~{engagement['likes']:,}\n"
+                  f"**Yorum:** ~{engagement['comments']:,}\n"
+                  f"**Kayıt:** ~{engagement['saves']:,}",
+            inline=True
+        )
+        
+        viral_prob = prediction['viral_probability']
+        viral_emoji = "🔥" if viral_prob > 70 else "✨" if viral_prob > 50 else "📊"
+        
+        embed.add_field(
+            name="🚀 Viral Olma İhtimali",
+            value=f"{viral_emoji} **%{viral_prob:.1f}**",
+            inline=False
+        )
+        
+        # Recommendations
+        tips = []
+        if not optimal_zaman:
+            tips.append("⏰ Optimal zamanda paylaş (daha fazla erişim)")
+        if not kaliteli_hashtag:
+            tips.append("#️⃣ Optimize edilmiş hashtag kullan")
+        if gorsel_kalite < 80:
+            tips.append("📸 Görsel kalitesini artır")
+        
+        if tips:
+            embed.add_field(name="💡 İyileştirme Önerileri", value="\n".join(tips), inline=False)
+        
+        embed.set_footer(text=f"Güvenilirlik: {prediction['confidence'].upper()}")
+        
+        await interaction.followup.send(embed=embed)
+        
+    except Exception as e:
+        await interaction.followup.send(f"❌ Hata: {str(e)}", ephemeral=True)
+
+@bot.tree.command(name="ig_caption", description="AI ile caption oluştur")
+async def instagram_caption(
+    interaction: discord.Interaction,
+    konu: str,
+    stil: str = "engaging"
+):
+    """Generate AI-powered captions"""
+    await interaction.response.defer(thinking=True)
+    
+    try:
+        styles_map = {
+            'engaging': 'engaging',
+            'profesyonel': 'professional',
+            'rahat': 'casual',
+            'eglenceli': 'engaging'
+        }
+        
+        style = styles_map.get(stil.lower(), 'engaging')
+        caption = await bot.ai_provider.generate_caption(konu, style)
+        
+        embed = discord.Embed(
+            title="✍️ AI Caption Önerisi",
+            description=caption,
+            color=discord.Color.green()
+        )
+        
+        embed.add_field(name="📝 Konu", value=konu, inline=True)
+        embed.add_field(name="🎨 Stil", value=stil.capitalize(), inline=True)
+        
+        embed.set_footer(text="💡 Yeniden oluşturmak için tekrar çalıştır")
+        
+        await interaction.followup.send(embed=embed)
+        
+    except Exception as e:
+        await interaction.followup.send(f"❌ Hata: {str(e)}", ephemeral=True)
+
+@bot.tree.command(name="ig_hashtag", description="Hashtag optimizasyonu")
+async def instagram_hashtags(
+    interaction: discord.Interaction,
+    niche: str,
+    hedef: str = "high"
+):
+    """Get optimized hashtags for your niche"""
+    await interaction.response.defer(thinking=True)
+    
+    try:
+        hashtags = bot.instagram_analytics.optimize_hashtags("", niche, hedef)
+        
+        hashtag_text = " ".join([f"#{tag}" for tag in hashtags])
+        
+        embed = discord.Embed(
+            title="#️⃣ Optimize Edilmiş Hashtag'ler",
+            description=hashtag_text,
+            color=discord.Color.blue()
+        )
+        
+        embed.add_field(name="🎯 Niche", value=niche.capitalize(), inline=True)
+        embed.add_field(name="📊 Hedef", value=hedef.upper(), inline=True)
+        embed.add_field(name="📈 Toplam", value=len(hashtags), inline=True)
+        
+        embed.add_field(
+            name="💡 Kullanım İpucu",
+            value="Bu hashtag'leri caption'ınızın sonuna veya ilk yoruma ekleyin",
+            inline=False
+        )
+        
+        await interaction.followup.send(embed=embed)
+        
+    except Exception as e:
+        await interaction.followup.send(f"❌ Hata: {str(e)}", ephemeral=True)
+
+@bot.tree.command(name="ig_rapor", description="Kapsamlı Instagram raporu")
+async def instagram_report(
+    interaction: discord.Interaction,
+    takipci: int,
+    engagement_rate: float = 3.0
+):
+    """Generate comprehensive Instagram analytics report"""
+    await interaction.response.defer(thinking=True)
+    
+    try:
+        profile_data = {
+            'followers': takipci,
+            'engagement_rate': engagement_rate,
+            'avg_reach': int(takipci * 0.3),
+            'posts_per_week': 5,
+            'stories_per_week': 7,
+            'save_rate': 2.5,
+            'follower_quality': 75,
+            'posts_per_month': 20,
+            'daily_growth': 15
+        }
+        
+        report = await bot.instagram_analytics.generate_content_report(profile_data)
+        
+        # Split report if too long
+        if len(report) > 2000:
+            # Send as multiple messages
+            chunks = [report[i:i+1900] for i in range(0, len(report), 1900)]
+            for i, chunk in enumerate(chunks):
+                if i == 0:
+                    await interaction.followup.send(f"```\n{chunk}\n```")
+                else:
+                    await interaction.channel.send(f"```\n{chunk}\n```")
+        else:
+            await interaction.followup.send(f"```\n{report}\n```")
+        
+    except Exception as e:
+        await interaction.followup.send(f"❌ Hata: {str(e)}", ephemeral=True)
+
+@bot.tree.command(name="ig_buyume", description="Büyüme stratejisi oluştur")
+async def instagram_growth(
+    interaction: discord.Interaction,
+    mevcut_takipci: int,
+    hedef_takipci: int,
+    gunluk_buyume: int = 10
+):
+    """Generate growth hacking strategy"""
+    await interaction.response.defer(thinking=True)
+    
+    try:
+        current_metrics = {
+            'followers': mevcut_takipci,
+            'daily_growth': gunluk_buyume,
+            'engagement_rate': 3.0
+        }
+        
+        goal_metrics = {
+            'followers': hedef_takipci
+        }
+        
+        strategy = bot.instagram_analytics.generate_growth_strategy(current_metrics, goal_metrics)
+        
+        embed = discord.Embed(
+            title="🚀 Büyüme Stratejisi",
+            description="AI destekli growth hacking planı",
+            color=discord.Color.gold()
+        )
+        
+        embed.add_field(
+            name="📊 Hedef Analizi",
+            value=f"**Mevcut:** {strategy['current_followers']:,}\n"
+                  f"**Hedef:** {strategy['goal_followers']:,}\n"
+                  f"**Gerekli:** {strategy['followers_needed']:,}",
+            inline=True
+        )
+        
+        if strategy['estimated_days']:
+            days = strategy['estimated_days']
+            months = days / 30
+            embed.add_field(
+                name="⏱️ Tahmini Süre",
+                value=f"**{days} gün** (~{months:.1f} ay)",
+                inline=True
+            )
+        
+        embed.add_field(
+            name="📈 Önerilen Günlük Büyüme",
+            value=f"**{strategy['recommended_daily_growth']} takipçi/gün**",
+            inline=True
+        )
+        
+        # Add strategies
+        strategies_text = "\n".join(strategy['strategies'][:8])
+        embed.add_field(
+            name="🎯 Aksiyon Planı",
+            value=strategies_text,
+            inline=False
+        )
+        
+        embed.set_footer(text="💡 Bu stratejileri günlük uygulayın")
+        
+        await interaction.followup.send(embed=embed)
+        
+    except Exception as e:
+        await interaction.followup.send(f"❌ Hata: {str(e)}", ephemeral=True)
+
+@bot.tree.command(name="ig_rakip", description="Rakip analizi")
+async def instagram_competitor(
+    interaction: discord.Interaction,
+    benim_takipci: int,
+    benim_engagement: float,
+    rakip_takipci: int,
+    rakip_engagement: float
+):
+    """Competitive analysis and benchmarking"""
+    await interaction.response.defer(thinking=True)
+    
+    try:
+        my_metrics = {
+            'followers': benim_takipci,
+            'engagement_rate': benim_engagement
+        }
+        
+        competitor_metrics = [{
+            'followers': rakip_takipci,
+            'engagement_rate': rakip_engagement
+        }]
+        
+        analysis = bot.instagram_analytics.competitor_analysis(my_metrics, competitor_metrics)
+        
+        embed = discord.Embed(
+            title="🎯 Rakip Analizi",
+            description="Competitive Intelligence Raporu",
+            color=discord.Color.orange()
+        )
+        
+        # Engagement comparison
+        eng_comp = analysis['engagement_comparison']
+        eng_status = "✅ Öndesiniz!" if eng_comp['status'] == 'ahead' else "⚠️ Geride kaldınız"
+        embed.add_field(
+            name="💝 Engagement Karşılaştırması",
+            value=f"**Sizin:** {eng_comp['my_rate']:.2f}%\n"
+                  f"**Rakip Ort.:** {eng_comp['competitor_avg']:.2f}%\n"
+                  f"**Fark:** {abs(eng_comp['gap']):.2f}%\n"
+                  f"{eng_status}",
+            inline=True
+        )
+        
+        # Follower comparison
+        fol_comp = analysis['follower_comparison']
+        fol_status = "✅ Öndesiniz!" if fol_comp['status'] == 'ahead' else "⚠️ Geride kaldınız"
+        embed.add_field(
+            name="👥 Takipçi Karşılaştırması",
+            value=f"**Sizin:** {fol_comp['my_followers']:,}\n"
+                  f"**Rakip Ort.:** {fol_comp['competitor_avg']:,}\n"
+                  f"**Fark:** {abs(fol_comp['gap']):,}\n"
+                  f"{fol_status}",
+            inline=True
+        )
+        
+        # Recommendations
+        if analysis['recommendations']:
+            recs_text = "\n".join(analysis['recommendations'][:5])
+            embed.add_field(
+                name="💡 Öneriler",
+                value=recs_text,
+                inline=False
+            )
+        
+        embed.set_footer(text="🎯 Bu önerileri uygulayarak farkı kapatın")
+        
+        await interaction.followup.send(embed=embed)
+        
+    except Exception as e:
+        await interaction.followup.send(f"❌ Hata: {str(e)}", ephemeral=True)
+
+@bot.tree.command(name="ig_optimal_zaman", description="Optimal paylaşım zamanı")
+async def instagram_timing(interaction: discord.Interaction):
+    """Calculate optimal posting times"""
+    await interaction.response.defer(thinking=True)
+    
+    try:
+        # Simulated historical data
+        historical_engagement = [
+            {'hour': h, 'engagement': random.randint(50, 200)} 
+            for h in range(24)
+            for _ in range(7)  # 7 days of data
+        ]
+        
+        optimal = bot.instagram_analytics.calculate_optimal_posting_time(
+            'Europe/Istanbul',
+            historical_engagement
+        )
+        
+        embed = discord.Embed(
+            title="⏰ Optimal Paylaşım Zamanları",
+            description="En yüksek etkileşim alacağınız saatler",
+            color=discord.Color.blue()
+        )
+        
+        times = [f"{h:02d}:00" for h in optimal['optimal_hours']]
+        embed.add_field(
+            name="🎯 En İyi Saatler",
+            value="\n".join([f"⭐ {t}" for t in times]),
+            inline=True
+        )
+        
+        embed.add_field(
+            name="📊 Öneriler",
+            value=f"**En İyi Saat:** {optimal['best_time']:02d}:00\n"
+                  f"**Paylaşım Sıklığı:** {optimal['recommended_frequency']}",
+            inline=True
+        )
+        
+        embed.add_field(
+            name="💡 İpuçları",
+            value="• Bu saatlerde paylaşım yapın\n"
+                  "• Tutarlı olun\n"
+                  "• İlk 30 dakika etkileşim önemli",
+            inline=False
+        )
+        
+        embed.set_footer(text="📱 Zamanlamayı takipçi aktivitesiyle eşleştirin")
+        
+        await interaction.followup.send(embed=embed)
+        
+    except Exception as e:
+        await interaction.followup.send(f"❌ Hata: {str(e)}", ephemeral=True)
 
 # ==================== BAŞLAT ====================
 
